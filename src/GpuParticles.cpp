@@ -2,31 +2,31 @@
  *  GpuParticles.cpp
  *
  *  Copyright (c) 2013, Neil Mendoza, http://www.neilmendoza.com
- *  All rights reserved. 
- *  
- *  Redistribution and use in source and binary forms, with or without 
- *  modification, are permitted provided that the following conditions are met: 
- *  
- *  * Redistributions of source code must retain the above copyright notice, 
- *    this list of conditions and the following disclaimer. 
- *  * Redistributions in binary form must reproduce the above copyright 
- *    notice, this list of conditions and the following disclaimer in the 
- *    documentation and/or other materials provided with the distribution. 
- *  * Neither the name of Neil Mendoza nor the names of its contributors may be used 
- *    to endorse or promote products derived from this software without 
- *    specific prior written permission. 
- *  
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
- *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
- *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
- *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
- *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
- *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
- *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
- *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
- *  POSSIBILITY OF SUCH DAMAGE. 
+ *  All rights reserved.
+ *
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *  * Neither the name of Neil Mendoza nor the names of its contributors may be used
+ *    to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ *  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ *  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ *  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  *
  */
 #include "GpuParticles.h"
@@ -36,17 +36,17 @@ namespace itg
     const string GpuParticles::UNIFORM_PREFIX = "particles";
     const string GpuParticles::UPDATE_SHADER_NAME = "update";
     const string GpuParticles::DRAW_SHADER_NAME = "draw";
-    
+
     GpuParticles::GpuParticles() : currentReadFbo(0), textureLocation(0)
     {
     }
-    
+
     void GpuParticles::init(unsigned width, unsigned height, ofPrimitiveMode primitive, bool loadDefaultShaders, unsigned numDataTextures)
     {
         this->width = width;
         this->height = height;
         numFloats = width * height * FLOATS_PER_TEXEL;
-        
+
         // fbos
         ofFbo::Settings s;
         s.internalformat = GL_RGBA32F_ARB;
@@ -62,7 +62,7 @@ namespace itg
         {
             fbos[i].allocate(s);
         }
-        
+
         // mesh
         mesh.clear();
         for (int y = 0; y < height; ++y)
@@ -74,26 +74,26 @@ namespace itg
             }
         }
         mesh.setMode(primitive);
-        
+
         quadMesh.addVertex(ofVec3f(-1.f, -1.f, 0.f));
         quadMesh.addVertex(ofVec3f(1.f, -1.f, 0.f));
         quadMesh.addVertex(ofVec3f(1.f, 1.f, 0.f));
         quadMesh.addVertex(ofVec3f(-1.f, 1.f, 0.f));
-        
+
         quadMesh.addTexCoord(ofVec2f(0.f, 0.f));
         quadMesh.addTexCoord(ofVec2f(width, 0.f));
         quadMesh.addTexCoord(ofVec2f(width, height));
         quadMesh.addTexCoord(ofVec2f(0.f, height));
-        
+
         quadMesh.addIndex(0);
         quadMesh.addIndex(1);
         quadMesh.addIndex(2);
         quadMesh.addIndex(0);
         quadMesh.addIndex(2);
         quadMesh.addIndex(3);
-        
+
         quadMesh.setMode(OF_PRIMITIVE_TRIANGLES);
-        
+
         // shaders
         if (loadDefaultShaders)
         {
@@ -101,13 +101,13 @@ namespace itg
             drawShader.load(DRAW_SHADER_NAME);
         }
     }
-    
+
     void GpuParticles::loadShaders(const string& updateShaderName, const string& drawShaderName)
     {
         updateShader.load(updateShaderName);
         drawShader.load(drawShaderName);
     }
-    
+
     void GpuParticles::update()
     {
         fbos[1 - currentReadFbo].begin(false);
@@ -119,19 +119,19 @@ namespace itg
         glDisable(GL_BLEND);
         ofSetColor(255, 255, 255);
         fbos[1 - currentReadFbo].activateAllDrawBuffers();
-        
+
         updateShader.begin();
         ofNotifyEvent(updateEvent, updateShader, this);
         setUniforms(updateShader);
         quadMesh.draw();
         updateShader.end();
         glPopAttrib();
-        
+
         fbos[1 - currentReadFbo].end();
-        
+
         currentReadFbo = 1 - currentReadFbo;
     }
-    
+
     void GpuParticles::draw()
     {
         drawShader.begin();
@@ -140,7 +140,7 @@ namespace itg
         mesh.draw();
         drawShader.end();
     }
-    
+
     void GpuParticles::setUniforms(ofShader& shader)
     {
         for (unsigned i = 0; i < fbos[currentReadFbo].getNumTextures(); ++i)
@@ -150,7 +150,7 @@ namespace itg
             shader.setUniformTexture(oss.str().c_str(), fbos[currentReadFbo].getTexture(i), i + textureLocation);
         }
     }
-    
+
     void GpuParticles::loadDataTexture(unsigned idx, float* data,
                                        unsigned x, unsigned y, unsigned width, unsigned height)
     {
@@ -164,7 +164,7 @@ namespace itg
         }
         else ofLogError() << "Trying to load data from array into non-existent buffer.";
     }
-    
+
     void GpuParticles::zeroDataTexture(unsigned idx,
                                        unsigned x, unsigned y, unsigned width, unsigned height)
     {
@@ -175,7 +175,7 @@ namespace itg
         loadDataTexture(idx, zeroes, x, y, width, height);
         delete[] zeroes;
     }
-    
+
     void GpuParticles::save(const string& fileName)
     {
         ofstream fileStream(ofToDataPath(fileName, true).c_str());
@@ -196,7 +196,7 @@ namespace itg
         }
         else ofLogError() << "Could not save particle data to " << ofToDataPath(fileName, true);
     }
-    
+
     void GpuParticles::load(const string& fileName)
     {
         ifstream fileStream(ofToDataPath(fileName, true).c_str());

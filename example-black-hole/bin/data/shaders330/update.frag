@@ -3,7 +3,7 @@
 // ping pong inputs
 uniform sampler2DRect particles0;
 uniform sampler2DRect particles1;
-uniform sampler2DRect particleColors;
+uniform sampler2DRect particles2;
 
 uniform vec3 mouse;
 uniform float radiusSquared;
@@ -13,11 +13,13 @@ in vec2 texCoordVarying;
 
 layout(location = 0) out vec4 posOut;
 layout(location = 1) out vec4 velOut;
+layout(location = 2) out vec4 clrOut;
 
 void main()
 {
     vec3 pos = texture(particles0, texCoordVarying.st).xyz;
     vec3 vel = texture(particles1, texCoordVarying.st).xyz;
+    vec4 clr = texture(particles2, texCoordVarying.st).rgba;
 
     // mouse attraction
     vec3 direction = mouse - pos.xyz;
@@ -43,4 +45,5 @@ void main()
 
     posOut = vec4(pos, 1.0);
     velOut = vec4(vel, 0.0);
+    clrOut = clr;
 }

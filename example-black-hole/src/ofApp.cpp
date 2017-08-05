@@ -5,20 +5,25 @@ void ofApp::setup()
 {
     ofBackground(0);
     ofSetFrameRate(60);
-    
+
     // 1,000,000 particles
     unsigned w = 500;
     unsigned h = 500;
-    
-    particles.init(w, h);
-    
+
+    particles.init(w,h);
+        // w,
+        // h,
+        // OF_PRIMITIVE_POINTS,
+        // false, /* don't load default shaders */
+        // 3 /* numDataTextures; we add a colors texture */);
+
     if (ofIsGLProgrammableRenderer()) particles.loadShaders("shaders330/update", "shaders330/draw");
     else particles.loadShaders("shaders120/update", "shaders120/draw");
-    
-    // initial positions
-    // use new to allocate 4,000,000 floats on the heap rather than
-    // the stack
+
+    // initial positions and colors
     float* particlePosns = new float[w * h * 4];
+    float* particleClrs = new float[w * h * 4];
+    ofColor initialClr = ofColor::white;
     for (unsigned y = 0; y < h; ++y)
     {
         for (unsigned x = 0; x < w; ++x)
@@ -28,14 +33,23 @@ void ofApp::setup()
             particlePosns[idx * 4 + 1] = 400.f * y / (float)h - 200.f; // particle y
             particlePosns[idx * 4 + 2] = 0.f; // particle z
             particlePosns[idx * 4 + 3] = 0.f; // dummy
+
+            particleClrs[idx*4] = initialClr.r;
+            particleClrs[idx*4+1] = initialClr.g;
+            particleClrs[idx*4+2] = initialClr.b;
+            particleClrs[idx*4+3] = initialClr.a;
         }
     }
+
     particles.loadDataTexture(ofxGpuParticles::POSITION, particlePosns);
     delete[] particlePosns;
-    
+
+    particles.loadDataTexture(ofxGpuParticles::COLOR, particleClrs);
+    delete[] particleClrs;
+
     // initial velocities
     particles.zeroDataTexture(ofxGpuParticles::VELOCITY);
-    
+
     // listen for update event to set additonal update uniforms
     ofAddListener(particles.updateEvent, this, &ofApp::onParticlesUpdate);
 }
@@ -107,6 +121,6 @@ void ofApp::gotMessage(ofMessage msg){
 }
 
 //--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
+void ofApp::dragEvent(ofDragInfo dragInfo){
 
 }
